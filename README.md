@@ -1,13 +1,11 @@
 # Default Event Values
 
-* Version: 0.2
+* Version: 0.3
 * Author: Brendan Abbott
 * Build Date: 5rd June 2011
 * Requirements: Symphony 2.2
 
-Adds the ability to default values for your Events. This allows you to set a field's value while omitting the hidden field from your form markup, which is useful to boost security. Values can be page parameters, excluding datasources though (as Events run before Datasources).
-
-You currently cannot fix the ID of an Event due to a Symphony limitation.
+Adds the ability to default values for your Events. This allows you to set a field's value while omitting the hidden field from your form markup. Values can be page parameters, excluding Datasources though as Events run before Datasources. You currently cannot set a default value for the ID of an Event due to a Symphony limitation.
 
 Values can be added as defaults, which can be overridden by users, or can be made to override any value that is posted via the Frontend. Please note that other extensions that use the EventPreSaveFilter may change the values after this extension has done it's business.
 

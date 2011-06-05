@@ -5,7 +5,7 @@
 		public function about(){
 			return array(
 				'name' => 'Default Event Values',
-				'version' => '0.2',
+				'version' => '0.3',
 				'release-date' => '2011-06-05',
 				'author' => array(
 					'name' => 'Brendan Abbott',
@@ -196,39 +196,6 @@
 			$ol = new XMLElement('ol');
 			$ol->setAttribute('class', 'filters-duplicator');
 
-			// Create real instance with real data
-			if(isset($event->eDefaultValues['system:id'])) {
-				$filter = $event->eDefaultValues['system:id'];
-
-				$li = new XMLElement('li');
-				$li->setAttribute('class', 'unique');
-				$li->setAttribute('data-type', 'system:id');
-				$li->appendChild(new XMLElement('h4', 'System ID'));
-
-				// Value
-				$label = Widget::Label(__('Value'));
-				$label->appendChild(
-					Widget::Input('default_event_values[system:id][value]', $filter['value'])
-				);
-				$li->appendChild($label);
-
-				// Will this value override?
-				$li->appendChild(
-					Widget::Input('default_event_values[system:id][override]', 'no', 'hidden')
-				);
-				$input = Widget::Input('default_event_values[system:id][override]', 'yes', 'checkbox');
-				if(isset($filter['override']) && $filter['override'] == 'yes') $input->setAttribute('checked', 'checked');
-				$label = Widget::Label(
-					__('%s Value will override any value posted from the frontend', array($input->generate()))
-				);
-
-				$compact = new XMLElement('div', null, array('class' => 'compact'));
-				$compact->appendChild($label);
-				$li->appendChild($compact);
-
-				$ol->appendChild($li);
-			}
-
 			// Loop over this event's section's fields
 			foreach($section->fetchFields() as $field) {
 				// Create duplicator template
@@ -253,9 +220,7 @@
 					__('%s Value will override any value posted from the frontend', array($input->generate()))
 				);
 
-				$compact = new XMLElement('div', null, array('class' => 'compact'));
-				$compact->appendChild($label);
-				$li->appendChild($compact);
+				$li->appendChild($label);
 
 				$ol->appendChild($li);
 
@@ -285,9 +250,7 @@
 						__('%s Value will override any value posted from the frontend', array($input->generate()))
 					);
 
-					$compact = new XMLElement('div', null, array('class' => 'compact'));
-					$compact->appendChild($label);
-					$li->appendChild($compact);
+					$li->appendChild($label);
 
 					$ol->appendChild($li);
 				}
