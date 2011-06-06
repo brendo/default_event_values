@@ -146,7 +146,27 @@
 				// Custom field, this will set $_POST instead of the `$context['fields']`
 				// as `$context['fields']` only contains things inside $_POST['fields']
 				if($dv['custom'] == 'yes') {
-					$_POST[$field] = $value;
+					$matches = preg_split('/\[/U', $field);
+					foreach($matches as $key => $match) {
+						$matches[$key] = trim($match, ']');
+					}
+
+					if(count($matches) == 1) {
+						if($dv['override'] == 'yes') {
+							$_POST[$field] = $value;
+						}
+
+						else if(!isset($_POST[$field])) {
+							$_POST[$field] = $value;
+						}
+					}
+					// We'll need to build out the relevant $_POST array
+					// @todo Support override
+					else {
+						$a = $this->addKey($matches, $value);
+						$_POST = array_merge_recursive($_POST, $a);
+					}
+
 					continue;
 				}
 
@@ -353,7 +373,13 @@
 				$name,
 				isset($value['value']) ? "'value' => '" . $value['value'] . "'," : null,
 				isset($value['override']) ? "'override' => '" . $value['override'] . "',"  : null,
-				isset($value['custom']) ? "'custom' => '" . $value['custom'] . "'"  : null
+				isset($value['custom']) ? "'custom' => '" . $value['custom'] . "'"	: null
 			);
+		}
+
+		private function addKey(&$array, $value = null) {
+			return ($key = array_pop($array))
+				? $this->addKey($array, array($key => $value))
+				: $value;
 		}
 	}
