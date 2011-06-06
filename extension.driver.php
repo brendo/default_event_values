@@ -188,7 +188,7 @@
 
 		private function injectFields(XMLElement &$form, array $callback) {
 			// skip when creating new events
-			if ($callback['context'][0] == 'new') return;
+			if ($callback['context'][0] == 'new') return $this->injectDefault($form);
 
 			$eventManager = new EventManager(Symphony::Engine());
 			$event = $eventManager->create($callback['context'][1]);
@@ -208,6 +208,22 @@
 			if(!$section instanceof Section) return null;
 
 			$this->injectDefaultValues($form, $event, $section);
+		}
+
+		private function injectDefault(XMLElement &$form) {
+			// Create the Default Values fieldset
+			$fieldset = new XMLElement('fieldset', null, array('class' => 'settings'));
+			$fieldset->appendChild(
+				new XMLElement('legend', __('Default Values'))
+			);
+
+			$div = new XMLElement('div', null);
+			$div->appendChild(
+				new XMLElement('p', __('Default values can be set for this event after it has been created.'), array('class' => 'label'))
+			);
+
+			$fieldset->appendChild($div);
+			$form->prependChild($fieldset);
 		}
 
 		private function injectDefaultValues(XMLElement &$form, Event $event, Section $section) {
