@@ -250,10 +250,12 @@
 
 			$this->createCustomValueDuplicatorTemplate($ol);
 
-			$custom_default_values = array_filter($custom_default_values);
-			if(!empty($custom_default_values)) {
-				foreach($custom_default_values as $name => $values) {
-					$this->createCustomValueDuplicatorTemplate($ol, $name, $values);
+			if(is_array($custom_default_values)) {
+				$custom_default_values = array_filter($custom_default_values);
+				if(!empty($custom_default_values)) {
+					foreach($custom_default_values as $name => $values) {
+						$this->createCustomValueDuplicatorTemplate($ol, $name, $values);
+					}
 				}
 			}
 
