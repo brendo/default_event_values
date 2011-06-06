@@ -5,8 +5,8 @@
 		public function about(){
 			return array(
 				'name' => 'Default Event Values',
-				'version' => '0.3',
-				'release-date' => '2011-06-05',
+				'version' => '0.4',
+				'release-date' => '2011-06-06',
 				'author' => array(
 					'name' => 'Brendan Abbott',
 					'website' => 'http://bloodbone.ws',
@@ -99,15 +99,20 @@
 
 			if(is_array($_POST['default_event_values'])) {
 				foreach($_POST['default_event_values'] as $field => $dv) {
-					$default_values .= sprintf('
-					"%s" => array(
-						%s
-						%s
-					),',
-						$field,
-						isset($dv['value']) ? "'value' => '" . $dv['value'] . "'," : null,
-						isset($dv['override']) ? "'override' => '" . $dv['override'] . "'"  : null
-					);
+					if($field == 'custom_value') {
+						$max = count($_POST['default_event_values']['custom_value']['key']) - 1;
+
+						for($i = 0; $i <= $max; $i++) {
+							$default_values .= $this->addCustomDefaultValue(array(
+								'field' => $dv['key'][$i],
+								'value' => $dv['value'][$i],
+								'override' => $dv['override'][$i]
+							));
+						}
+					}
+					else {
+						$default_values .= $this->addDefaultValue($field, $dv);
+					}
 				}
 			}
 
@@ -133,13 +138,20 @@
 				'param' => Frontend::instance()->Page()->_param
 			);
 
-			// Loop over the Default Values, setting them in the $_POST data
-			// as appropriate
+			// Loop over the Default Values, setting them in $_POST or `$context['fields']`
+			// as appropriate.
 			foreach($context['event']->eDefaultValues as $field => $dv) {
 				$value = $datasource->__processParametersInString($dv['value'], $env);
 
+				// Custom field, this will set $_POST instead of the `$context['fields']`
+				// as `$context['fields']` only contains things inside $_POST['fields']
+				if($dv['custom'] == 'yes') {
+					$_POST[$field] = $value;
+					continue;
+				}
+
 				// If the DV is an override, set it regardless
-				if($dv['override'] = 'yes') {
+				if($dv['override'] == 'yes') {
 					$context['fields'][$field] = $value;
 				}
 
@@ -196,68 +208,152 @@
 			$ol = new XMLElement('ol');
 			$ol->setAttribute('class', 'filters-duplicator');
 
+			$custom_default_values = $event->eDefaultValues;
+
 			// Loop over this event's section's fields
 			foreach($section->fetchFields() as $field) {
-				// Create duplicator template
-				$li = new XMLElement('li');
-				$li->setAttribute('class', 'unique template');
-				$li->setAttribute('data-type', $field->get('element_name'));
-				$li->appendChild(new XMLElement('h4', $field->get('label')));
+				// Remove this from the `custom_default_values` array
+				unset($custom_default_values[$field->get('element_name')]);
 
-				// Value
-				$label = Widget::Label(__('Value'));
-				$label->appendChild(
-					Widget::Input('default_event_values['.$field->get('element_name').'][value]')
-				);
-				$li->appendChild($label);
-
-				// Will this value override?
-				$li->appendChild(
-					Widget::Input('default_event_values['.$field->get('element_name').'][override]', 'no', 'hidden')
-				);
-				$input = Widget::Input('default_event_values['.$field->get('element_name').'][override]', 'yes', 'checkbox');
-				$label = Widget::Label(
-					__('%s Value will override any value posted from the frontend', array($input->generate()))
-				);
-
-				$li->appendChild($label);
-
-				$ol->appendChild($li);
+				// Add template
+				$this->createDuplicatorTemplate($ol, $field->get('label'), $field->get('element_name'));
 
 				// Create real instance with real data
 				if(isset($event->eDefaultValues[$field->get('element_name')])) {
 					$filter = $event->eDefaultValues[$field->get('element_name')];
+					$this->createDuplicatorTemplate($ol, $field->get('label'), $field->get('element_name'), $filter);
+				}
+			}
 
-					$li = new XMLElement('li');
-					$li->setAttribute('class', 'unique');
-					$li->setAttribute('data-type', $field->get('element_name'));
-					$li->appendChild(new XMLElement('h4', $field->get('label')));
+			$this->createCustomValueDuplicatorTemplate($ol);
 
-					// Value
-					$label = Widget::Label(__('Value'));
-					$label->appendChild(
-						Widget::Input('default_event_values['.$field->get('element_name').'][value]', $filter['value'])
-					);
-					$li->appendChild($label);
-
-					// Will this value override?
-					$li->appendChild(
-						Widget::Input('default_event_values['.$field->get('element_name').'][override]', 'no', 'hidden')
-					);
-					$input = Widget::Input('default_event_values['.$field->get('element_name').'][override]', 'yes', 'checkbox');
-					if(isset($filter['override']) && $filter['override'] == 'yes') $input->setAttribute('checked', 'checked');
-					$label = Widget::Label(
-						__('%s Value will override any value posted from the frontend', array($input->generate()))
-					);
-
-					$li->appendChild($label);
-
-					$ol->appendChild($li);
+			$custom_default_values = array_filter($custom_default_values);
+			if(!empty($custom_default_values)) {
+				foreach($custom_default_values as $name => $values) {
+					$this->createCustomValueDuplicatorTemplate($ol, $name, $values);
 				}
 			}
 
 			$div->appendChild($ol);
 			$fieldset->appendChild($div);
 			$form->prependChild($fieldset);
+		}
+
+		private function createDuplicatorTemplate(XMLElement $wrapper, $label, $name, array $values = null) {
+			// Create duplicator template
+			$li = new XMLElement('li');
+			$li->setAttribute('data-type', $name);
+			$li->appendChild(new XMLElement('h4', $label));
+
+			if(is_null($values)) {
+				$li->setAttribute('class', 'unique template');
+			}
+			else {
+				$li->setAttribute('class', 'unique');
+			}
+
+			// Value
+			$xLabel = Widget::Label(__('Value'));
+			$xLabel->appendChild(
+				Widget::Input('default_event_values['.$name.'][value]', !is_null($values) ? $values['value'] : null)
+			);
+			$li->appendChild($xLabel);
+
+			// Will this value override?
+			$li->appendChild(
+				Widget::Input('default_event_values['.$name.'][override]', 'no', 'hidden')
+			);
+			$input = Widget::Input('default_event_values['.$name.'][override]', 'yes', 'checkbox');
+			if(isset($values['override']) && $values['override'] == 'yes') {
+				$input->setAttribute('checked', 'checked');
+			}
+
+			$xLabel = Widget::Label(
+				__('%s Value will override any value posted from the frontend', array($input->generate()))
+			);
+			$li->appendChild($xLabel);
+
+			// Add to the wrapper
+			$wrapper->appendChild($li);
+		}
+
+		private function createCustomValueDuplicatorTemplate(XMLElement $wrapper, $name = 'Custom', array $values = null) {
+			// Create duplicator template
+			$li = new XMLElement('li');
+			$li->appendChild(new XMLElement('h4', $name));
+
+			if(is_null($values)) {
+				$li->setAttribute('class', 'template');
+			}
+
+			$group = new XMLElement('div', null, array('class' => 'group'));
+
+			// Column One
+			$col = new XMLElement('div');
+
+			// Custom Key
+			$xLabel = Widget::Label(__('Key'));
+			$xLabel->appendChild(
+				Widget::Input('default_event_values[custom_value][key][]', ($name !== 'Custom') ? $name : null)
+			);
+			$col->appendChild($xLabel);
+			$group->appendChild($col);
+
+			// Set Custom flag
+			$col->appendChild(
+				Widget::Input('default_event_values[custom_value][custom][]', 'yes', 'hidden')
+			);
+
+			// Column Two
+			$col = new XMLElement('div');
+
+			// Value
+			$xLabel = Widget::Label(__('Value'));
+			$xLabel->appendChild(
+				Widget::Input('default_event_values[custom_value][value][]', !is_null($values) ? $values['value'] : null)
+			);
+			$col->appendChild($xLabel);
+
+			// Will this value override?
+			$col->appendChild(
+				Widget::Input('default_event_values[custom_value][override][]', 'no', 'hidden')
+			);
+			$input = Widget::Input('default_event_values[custom_value][override][]', 'yes', 'checkbox');
+			if(isset($values['override']) && $values['override'] == 'yes') {
+				$input->setAttribute('checked', 'checked');
+			}
+
+			$xLabel = Widget::Label(
+				__('%s Value will override any value posted from the frontend', array($input->generate()))
+			);
+			$col->appendChild($xLabel);
+
+			$group->appendChild($col);
+			$li->appendChild($group);
+
+			// Add to the wrapper
+			$wrapper->appendChild($li);
+		}
+
+		private function addCustomDefaultValue($custom) {
+			return $this->addDefaultValue($custom['field'], array(
+				'value' => $custom['value'],
+				'override' => $custom['override'],
+				'custom' => 'yes'
+			));
+		}
+
+		private function addDefaultValue($name, $value) {
+			return sprintf('
+			"%s" => array(
+				%s
+				%s
+				%s
+			),',
+				$name,
+				isset($value['value']) ? "'value' => '" . $value['value'] . "'," : null,
+				isset($value['override']) ? "'override' => '" . $value['override'] . "',"  : null,
+				isset($value['custom']) ? "'custom' => '" . $value['custom'] . "'"  : null
+			);
 		}
 	}
