@@ -167,6 +167,9 @@
 	-------------------------------------------------------------------------*/
 
 		private function injectFields(XMLElement &$form, array $callback) {
+			// skip when creating new events
+			if ($callback['context'][0] == 'new') return;
+
 			$eventManager = new EventManager(Symphony::Engine());
 			$event = $eventManager->create($callback['context'][1]);
 			$event_source = null;
