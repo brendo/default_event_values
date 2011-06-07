@@ -103,11 +103,11 @@
 						$max = count($_POST['default_event_values']['custom_value']);
 
 						for($i = 1; $i <= $max; $i++) {
-							$default_values .= $this->addCustomDefaultValue($_POST['default_event_values']['custom_value'][$i]);
+							$default_values .= self::addCustomDefaultValue($_POST['default_event_values']['custom_value'][$i]);
 						}
 					}
 					else {
-						$default_values .= $this->addDefaultValue($field, $dv);
+						$default_values .= self::addDefaultValue($field, $dv);
 					}
 				}
 			}
@@ -148,38 +148,115 @@
 					}
 
 					if(count($matches) == 1) {
-						if($dv['override'] == 'yes') {
-							$_POST[$field] = $value;
-						}
-
-						else if(!isset($_POST[$field])) {
-							$_POST[$field] = $value;
-						}
+						self::setArrayValue($_POST, $field, $value, ($dv['override'] == 'yes'));
 					}
 					// We'll need to build out the relevant $_POST array
-					// @todo Support override
 					else {
-						$a = $this->addKey($matches, $value);
-						$_POST = array_merge_recursive($_POST, $a);
+						$tree = self::addKey($matches, $value);
+
+						// If the DV is an override, set it regardless
+						// DV is not an override, so only set if it hasn't already been set
+						if(($dv['override'] == 'no') && !self::checkArrayForTree($_POST, $tree)) {
+							$_POST = array_merge_recursive($_POST, $tree);
+						}
+						else if($dv['override'] == 'yes') {
+							$_POST = array_replace_recursive($_POST, $tree);
+						}
 					}
 
 					continue;
 				}
 
-				// If the DV is an override, set it regardless
-				if($dv['override'] == 'yes') {
-					$context['fields'][$field] = $value;
-				}
-
-				// DV is not an override, so only set if it hasn't already been set
-				else if(!isset($context['fields'][$field])) {
-					$context['fields'][$field] = $value;
-				}
+				self::setArrayValue($context['fields'], $field, $value, ($dv['override'] == 'yes'));
 			}
 		}
 
 	/*-------------------------------------------------------------------------
-		Utilities:
+		Helpers:
+	-------------------------------------------------------------------------*/
+
+		/**
+		 * Given a flat array, build this out to be an associative array setting
+		 * the last key to the `$value`.
+		 *
+		 * @param array $array
+		 * @param string $value
+		 * @return array
+		 */
+		private static function addKey(&$array, $value = null) {
+			return ($key = array_pop($array))
+				? self::addKey($array, array($key => $value))
+				: $value;
+		}
+
+		/**
+		 * Given an array, this function will set the `$value` at the `$key`.
+		 * If `$override` is set to the true, the value will be set regardless,
+		 * if not it will only be set if the key doesn't already exist
+		 *
+		 * @param array $array
+		 * @param string $key
+		 * @param string $value
+		 * @param boolean $override
+		 */
+		private static function setArrayValue(&$array, $key, $value, $override) {
+			if($override || !isset($array[$key])) {
+				$array[$key] = $value;
+			}
+		}
+
+		/**
+		 * Given one `$array` structure, this functions checks to see if the `$tree`
+		 * structure exists in the `$array` returning boolean
+		 *
+		 * @param array $array
+		 * @param array $tree
+		 * @return boolean
+		 *  True if the structure does exist, false otherwise
+		 */
+		private static function checkArrayForTree(&$array, $tree) {
+			// If either parameter is now not an array, return true
+			// as the structure exists
+			if(!is_array($array) || !is_array($tree)) {
+				return true;
+			}
+
+			// Get keys in the tree
+			foreach(array_keys($tree) as $key) {
+				// Check to see if the key exists in $array
+				if(in_array($key, array_keys($array))) {
+					// If it exists, move down the tree and check the next one
+					return self::checkArrayForTree($array[$key], $tree[$key]);
+				}
+				// If it doesn't, return false
+				return false;
+			}
+		}
+
+		private static function addCustomDefaultValue($custom) {
+			return self::addDefaultValue($custom['key'], array(
+				'value' => $custom['value'],
+				'override' => $custom['override'],
+				'custom' => 'yes'
+			));
+		}
+
+		private static function addDefaultValue($name, $value) {
+			return sprintf('
+			"%s" => array(
+				%s
+				%s
+				%s
+			),',
+				$name,
+				isset($value['value']) ? "'value' => '" . $value['value'] . "'," : null,
+				isset($value['override']) ? "'override' => '" . $value['override'] . "',"  : null,
+				isset($value['custom']) ? "'custom' => '" . $value['custom'] . "'"	: null
+			);
+		}
+
+	/*-------------------------------------------------------------------------
+		Event Editor:
 	-------------------------------------------------------------------------*/
 
 		private function injectFields(XMLElement &$form, array $callback) {
@@ -276,6 +353,10 @@
 			$form->prependChild($fieldset);
 		}
 
+	/*-------------------------------------------------------------------------
+		Duplicator Utilities
+	-------------------------------------------------------------------------*/
+
 		private function createDuplicatorTemplate(XMLElement $wrapper, $label, $name, array $values = null) {
 			// Create duplicator template
 			$li = new XMLElement('li');
@@ -367,31 +448,42 @@
 			$wrapper->appendChild($li);
 		}
 
-		private function addCustomDefaultValue($custom) {
-			return $this->addDefaultValue($custom['key'], array(
-				'value' => $custom['value'],
-				'override' => $custom['override'],
-				'custom' => 'yes'
-			));
-		}
+	}
 
-		private function addDefaultValue($name, $value) {
-			return sprintf('
-			"%s" => array(
-				%s
-				%s
-				%s
-			),',
-				$name,
-				isset($value['value']) ? "'value' => '" . $value['value'] . "'," : null,
-				isset($value['override']) ? "'override' => '" . $value['override'] . "',"  : null,
-				isset($value['custom']) ? "'custom' => '" . $value['custom'] . "'"	: null
-			);
-		}
+	/**
+	 * One hundred thousand man hugs and thanks to Gregor for this function
+	 * @link http://www.php.net/manual/en/function.array-replace-recursive.php#92574
+	 */
+	if(!function_exists('array_replace_recursive')) {
+		function array_replace_recursive($array, $array1) {
+			function recurse($array, $array1) {
+				foreach ($array1 as $key => $value) {
+					// create new key in $array, if it is empty or not an array
+					if (!isset($array[$key]) || (isset($array[$key]) && !is_array($array[$key]))) {
+						$array[$key] = array();
+					}
 
-		private function addKey(&$array, $value = null) {
-			return ($key = array_pop($array))
-				? $this->addKey($array, array($key => $value))
-				: $value;
+					// overwrite the value in the base array
+					if (is_array($value)) {
+						$value = recurse($array[$key], $value);
+					}
+					$array[$key] = $value;
+				}
+				return $array;
+			}
+
+			// handle the arguments, merge one by one
+			$args = func_get_args();
+			$array = $args[0];
+			if (!is_array($array)) {
+			  return $array;
+			}
+			for ($i = 1; $i < count($args); $i++) {
+				if (is_array($args[$i])) {
+					$array = recurse($array, $args[$i]);
+				}
+			}
+
+			return $array;
 		}
 	}
