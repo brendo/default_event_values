@@ -100,14 +100,10 @@
 			if(is_array($_POST['default_event_values'])) {
 				foreach($_POST['default_event_values'] as $field => $dv) {
 					if($field == 'custom_value') {
-						$max = count($_POST['default_event_values']['custom_value']['key']) - 1;
+						$max = count($_POST['default_event_values']['custom_value']);
 
-						for($i = 0; $i <= $max; $i++) {
-							$default_values .= $this->addCustomDefaultValue(array(
-								'field' => $dv['key'][$i],
-								'value' => $dv['value'][$i],
-								'override' => $dv['override'][$i]
-							));
+						for($i = 1; $i <= $max; $i++) {
+							$default_values .= $this->addCustomDefaultValue($_POST['default_event_values']['custom_value'][$i]);
 						}
 					}
 					else {
@@ -335,15 +331,10 @@
 			// Custom Key
 			$xLabel = Widget::Label(__('Key'));
 			$xLabel->appendChild(
-				Widget::Input('default_event_values[custom_value][key][]', ($name !== 'Custom') ? $name : null)
+				Widget::Input('default_event_values[custom_value][-1][key]', ($name !== 'Custom') ? $name : null)
 			);
 			$col->appendChild($xLabel);
 			$group->appendChild($col);
-
-			// Set Custom flag
-			$col->appendChild(
-				Widget::Input('default_event_values[custom_value][custom][]', 'yes', 'hidden')
-			);
 
 			// Column Two
 			$col = new XMLElement('div');
@@ -351,15 +342,15 @@
 			// Value
 			$xLabel = Widget::Label(__('Value'));
 			$xLabel->appendChild(
-				Widget::Input('default_event_values[custom_value][value][]', !is_null($values) ? $values['value'] : null)
+				Widget::Input('default_event_values[custom_value][-1][value]', !is_null($values) ? $values['value'] : null)
 			);
 			$col->appendChild($xLabel);
 
 			// Will this value override?
-			$col->appendChild(
-				Widget::Input('default_event_values[custom_value][override][]', 'no', 'hidden')
+			$li->appendChild(
+				Widget::Input('default_event_values[custom_value][-1][override]', 'no', 'hidden')
 			);
-			$input = Widget::Input('default_event_values[custom_value][override][]', 'yes', 'checkbox');
+			$input = Widget::Input('default_event_values[custom_value][-1][override]', 'yes', 'checkbox');
 			if(isset($values['override']) && $values['override'] == 'yes') {
 				$input->setAttribute('checked', 'checked');
 			}
@@ -377,7 +368,7 @@
 		}
 
 		private function addCustomDefaultValue($custom) {
-			return $this->addDefaultValue($custom['field'], array(
+			return $this->addDefaultValue($custom['key'], array(
 				'value' => $custom['value'],
 				'override' => $custom['override'],
 				'custom' => 'yes'
