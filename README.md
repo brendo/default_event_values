@@ -1,6 +1,6 @@
 # Default Event Values
 
-* Version: 0.5
+* Version: 0.5.1
 * Author: Brendan Abbott
 * Build Date: 8th June 2011
 * Requirements: Symphony 2.2

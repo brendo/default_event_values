@@ -5,7 +5,7 @@
 		public function about(){
 			return array(
 				'name' => 'Default Event Values',
-				'version' => '0.5',
+				'version' => '0.5.1',
 				'release-date' => '2011-06-08',
 				'author' => array(
 					'name' => 'Brendan Abbott',
@@ -102,7 +102,9 @@
 					if($field == 'custom_value') {
 						$max = count($_POST['default_event_values']['custom_value']);
 
-						for($i = 1; $i <= $max; $i++) {
+						for($i = 0; $i <= $max; $i++) {
+							if(!isset($_POST['default_event_values']['custom_value'][$i])) continue;
+
 							$default_values .= self::addCustomDefaultValue($_POST['default_event_values']['custom_value'][$i]);
 						}
 					}
