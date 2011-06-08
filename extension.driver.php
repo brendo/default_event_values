@@ -5,8 +5,8 @@
 		public function about(){
 			return array(
 				'name' => 'Default Event Values',
-				'version' => '0.4',
-				'release-date' => '2011-06-06',
+				'version' => '0.5',
+				'release-date' => '2011-06-08',
 				'author' => array(
 					'name' => 'Brendan Abbott',
 					'website' => 'http://bloodbone.ws',
