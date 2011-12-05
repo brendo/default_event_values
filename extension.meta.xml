@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="default_event_values">
+	<name>Default Event Values</name>
+	<description>Adds the ability to default values for your Events.</description>
+	<repo type="github">https://github.com/brendo/default_event_values</repo>
+	<url type="discuss">http://symphony-cms.com/discuss/thread/70706/</url>
+	<types>
+		<type>Events</type>
+	</types>
+	<authors>
+		<author>
+			<name github="brendo" symphony="brendo">Brendan Abbott</name>
+			<website>http://www.bloodbone.ws</website>
+		</author>
+	</authors>
+	<media>
+		<item type="image" url="http://symphonyextensions.com/brendo/default_event_values/media/default_event_values.png">Default Event Values: Adds the ability to default values for your Events.</item>
+	</media>
+	<releases>
+		<release version="0.5.1" date="2011-06-08" min="2.2" />
+	</releases>
+</extension>
