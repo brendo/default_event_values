@@ -2,19 +2,6 @@
 
 	Class extension_default_event_values extends Extension{
 
-		public function about(){
-			return array(
-				'name' => 'Default Event Values',
-				'version' => '0.5.1',
-				'release-date' => '2011-06-08',
-				'author' => array(
-					'name' => 'Brendan Abbott',
-					'website' => 'http://bloodbone.ws',
-					'email' => 'brendan@bloodbone.ws'
-				)
-			);
-		}
-
 		public function getSubscribedDelegates() {
 			return array(
 				array(
@@ -57,35 +44,12 @@
 					// Get the children of the Contents wrapper
 					$xChildren = $page->Contents->getChildren();
 
-					// Create a new instance of Contents
-					$page->Contents = new XMLElement('div', null, array('id' => 'contents'));
-					// Append the heading to Contents
-					$page->Contents->appendChild(
-						array_shift($xChildren)
-					);
-
 					// Pop off the current <form> array and get it's children
 					$form = array_shift($xChildren);
-					$formChildren = $form->getChildren();
-					$formAttributes = $form->getAttributes();
-
-					// Pop off the essentials fieldset and save it for later
-					$essentials = array_shift($formChildren);
-
-					// Create a new form element and append the result of the children to it
-					$form = new XMLElement('form');
-					$form->appendChildArray($formChildren);
-					$form->setAttributeArray($formAttributes);
 
 					// Inject our custom goodness, using `prependChild` so that it's
 					// at the start of the form
 					$this->injectFields($form, $callback);
-
-					// Add the essentials fieldset to the start of the form
-					$form->prependChild($essentials);
-
-					// Append the form back to our Contents page
-					$page->Contents->appendChild($form);
 				}
 			}
 		}
@@ -128,12 +92,12 @@
 
 			// Create a Datasource class, which has the logic for finding Parameters
 			// and turning them into the values.
-			$datasource = new Datasource(Frontend::instance(), null, false);
+			$datasource = new Datasource(null, false);
 
 			// Fake an environment to find Parameters in
 			$env = array(
 				'env' => Frontend::instance()->Page()->Env(),
-				'param' => Frontend::instance()->Page()->_param
+				'param' => Frontend::instance()->Page()->Params()
 			);
 
 			// Loop over the Default Values, setting them in $_POST or `$context['fields']`
@@ -265,8 +229,7 @@
 			// skip when creating new events
 			if ($callback['context'][0] == 'new') return $this->injectDefault($form);
 
-			$eventManager = new EventManager(Symphony::Engine());
-			$event = $eventManager->create($callback['context'][1]);
+			$event = EventManager::create($callback['context'][1]);
 			$event_source = null;
 
 			if(method_exists($event, 'getSource')) {
@@ -276,8 +239,7 @@
 			// This isn't a typical event, so return
 			if(!is_numeric($event_source)) return null;
 
-			$sectionManager = new SectionManager(Symphony::Engine());
-			$section = $sectionManager->fetch($event_source);
+			$section = SectionManager::fetch($event_source);
 
 			// For whatever reason, the Section doesn't exist anymore
 			if(!$section instanceof Section) return null;
@@ -294,11 +256,11 @@
 
 			$div = new XMLElement('div', null);
 			$div->appendChild(
-				new XMLElement('p', __('Default values can be set for this event after it has been created.'), array('class' => 'label'))
+				new XMLElement('p', __('Default values can be set after this event has been created.'), array('class' => 'label'))
 			);
 
 			$fieldset->appendChild($div);
-			$form->prependChild($fieldset);
+			$form->insertChildAt(1, $fieldset);
 		}
 
 		private function injectDefaultValues(XMLElement &$form, Event $event, Section $section) {
@@ -352,7 +314,7 @@
 
 			$div->appendChild($ol);
 			$fieldset->appendChild($div);
-			$form->prependChild($fieldset);
+			$form->insertChildAt(1, $fieldset);
 		}
 
 	/*-------------------------------------------------------------------------
@@ -363,7 +325,10 @@
 			// Create duplicator template
 			$li = new XMLElement('li');
 			$li->setAttribute('data-type', $name);
-			$li->appendChild(new XMLElement('h4', $label));
+
+			$header = new XMLElement('header');
+			$header->appendChild(new XMLElement('h4', $label));
+			$li->appendChild($header);
 
 			if(is_null($values)) {
 				$li->setAttribute('class', 'unique template');
@@ -400,16 +365,19 @@
 		private function createCustomValueDuplicatorTemplate(XMLElement $wrapper, $name = 'Custom', array $values = null) {
 			// Create duplicator template
 			$li = new XMLElement('li');
-			$li->appendChild(new XMLElement('h4', $name));
+			$header = new XMLElement('header');
+			$header->appendChild(new XMLElement('h4', $name));
+			$li->appendChild($header);
 
 			if(is_null($values)) {
 				$li->setAttribute('class', 'template');
 			}
 
-			$group = new XMLElement('div', null, array('class' => 'group'));
+			$group = new XMLElement('div', null, array('class' => 'two columns'));
 
 			// Column One
 			$col = new XMLElement('div');
+			$col->setAttribute('class', 'column');
 
 			// Custom Key
 			$xLabel = Widget::Label(__('Key'));
@@ -421,6 +389,7 @@
 
 			// Column Two
 			$col = new XMLElement('div');
+			$col->setAttribute('class', 'column');
 
 			// Value
 			$xLabel = Widget::Label(__('Value'));
