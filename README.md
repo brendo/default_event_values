@@ -2,7 +2,7 @@
 
 * Version: 0.6
 * Author: Brendan Abbott
-* Build Date: 27th March 2012
+* Build Date: 29th May 2012
 * Requirements: Symphony 2.3
 
 Adds the ability to default values for your Events. This allows you to set a field's value while omitting the hidden field from your form markup. Values can be page parameters, excluding Datasources though as Events run before Datasources. You currently cannot set a default value for the ID of an Event due to a Symphony limitation.
