@@ -365,6 +365,7 @@
 		private function createCustomValueDuplicatorTemplate(XMLElement $wrapper, $name = 'Custom', array $values = null) {
 			// Create duplicator template
 			$li = new XMLElement('li');
+			$li->setAttribute('data-type', 'custom');
 			$header = new XMLElement('header');
 			$header->appendChild(new XMLElement('h4', $name));
 			$li->appendChild($header);
