@@ -133,6 +133,7 @@
 					continue;
 				}
 
+				self::setArrayValue($_POST['fields'], $field, $value, ($dv['override'] == 'yes'));
 				self::setArrayValue($context['fields'], $field, $value, ($dv['override'] == 'yes'));
 			}
 		}
