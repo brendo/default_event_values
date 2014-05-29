@@ -64,12 +64,8 @@
 			if(is_array($_POST['default_event_values'])) {
 				foreach($_POST['default_event_values'] as $field => $dv) {
 					if($field == 'custom_value') {
-						$max = count($_POST['default_event_values']['custom_value']);
-
-						for($i = 0; $i <= $max; $i++) {
-							if(!isset($_POST['default_event_values']['custom_value'][$i])) continue;
-
-							$default_values .= self::addCustomDefaultValue($_POST['default_event_values']['custom_value'][$i]);
+						foreach($dv as $custom_value) {
+							$default_values .= self::addCustomDefaultValue($custom_value);
 						}
 					}
 					else {
