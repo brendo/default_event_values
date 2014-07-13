@@ -314,7 +314,7 @@
 			$frame->appendChild($ol);
 			$div->appendChild($frame);
 			$fieldset->appendChild($div);
-			$form->insertChildAt(1, $fieldset);
+			$form->insertChildAt(2, $fieldset);
 		}
 
 	/*-------------------------------------------------------------------------
