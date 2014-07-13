@@ -261,7 +261,7 @@
 			);
 
 			$fieldset->appendChild($div);
-			$form->insertChildAt(1, $fieldset);
+			$form->insertChildAt(2, $fieldset);
 		}
 
 		private function injectDefaultValues(XMLElement &$form, Event $event, Section $section) {
@@ -282,8 +282,10 @@
 			);
 
 			// Create Duplicators
+			$frame = new XMLElement('div');
+			$frame->setAttribute('class', 'filters-duplicator frame');
+			$frame->setAttribute('data-interactive', 'true');
 			$ol = new XMLElement('ol');
-			$ol->setAttribute('class', 'filters-duplicator');
 
 			$custom_default_values = $event->eDefaultValues;
 
@@ -313,7 +315,8 @@
 				}
 			}
 
-			$div->appendChild($ol);
+			$frame->appendChild($ol);
+			$div->appendChild($frame);
 			$fieldset->appendChild($div);
 			$form->insertChildAt(1, $fieldset);
 		}
