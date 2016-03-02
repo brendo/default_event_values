@@ -74,8 +74,8 @@
 				}
 			}
 
-			$default_values .= PHP_EOL . str_repeat("\t", 2) . ');';
-			$default_values .= PHP_EOL . PHP_EOL . str_repeat("\t", 2) . 'public $eParamFILTERS';
+			$default_values .= PHP_EOL . '    );';
+			$default_values .= PHP_EOL . PHP_EOL . '    public $eParamFILTERS';
 
 			$context['contents'] = preg_replace('/public \$eParamFILTERS/i', $default_values, $context['contents']);
 		}
@@ -205,16 +205,15 @@
 		}
 
 		private static function addDefaultValue($name, $value) {
-			return sprintf('
-			"%s" => array(
-				%s
-				%s
-				%s
-			),',
+			return sprintf("
+        '%s' => array(
+            %s
+            %s%s
+        ),",
 				$name,
 				isset($value['value']) ? "'value' => '" . $value['value'] . "'," : null,
 				isset($value['override']) ? "'override' => '" . $value['override'] . "',"  : null,
-				isset($value['custom']) ? "'custom' => '" . $value['custom'] . "'"	: null
+				isset($value['custom']) ? PHP_EOL . "            'custom' => '" . $value['custom'] . "'"	: null
 			);
 		}
 
@@ -257,7 +256,7 @@
 			);
 
 			$fieldset->appendChild($div);
-			$form->insertChildAt(1, $fieldset);
+			$form->insertChildAt(2, $fieldset);
 		}
 
 		private function injectDefaultValues(XMLElement &$form, Event $event, Section $section) {
@@ -278,8 +277,10 @@
 			);
 
 			// Create Duplicators
+			$frame = new XMLElement('div');
+			$frame->setAttribute('class', 'filters-duplicator frame');
+			$frame->setAttribute('data-interactive', 'true');
 			$ol = new XMLElement('ol');
-			$ol->setAttribute('class', 'filters-duplicator');
 
 			$custom_default_values = $event->eDefaultValues;
 
@@ -309,9 +310,10 @@
 				}
 			}
 
-			$div->appendChild($ol);
+			$frame->appendChild($ol);
+			$div->appendChild($frame);
 			$fieldset->appendChild($div);
-			$form->insertChildAt(1, $fieldset);
+			$form->insertChildAt(2, $fieldset);
 		}
 
 	/*-------------------------------------------------------------------------
@@ -362,6 +364,7 @@
 		private function createCustomValueDuplicatorTemplate(XMLElement $wrapper, $name = 'Custom', array $values = null) {
 			// Create duplicator template
 			$li = new XMLElement('li');
+			$li->setAttribute('data-type', 'custom');
 			$header = new XMLElement('header');
 			$header->appendChild(new XMLElement('h4', $name));
 			$li->appendChild($header);
