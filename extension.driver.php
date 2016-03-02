@@ -272,9 +272,6 @@
 			);
 
 			$div = new XMLElement('div', null);
-			$div->appendChild(
-				new XMLElement('p', __('Add Default Value'), array('class' => 'label'))
-			);
 
 			// Create Duplicators
 			$frame = new XMLElement('div');
