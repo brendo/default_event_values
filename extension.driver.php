@@ -271,8 +271,6 @@
 				))
 			);
 
-			$div = new XMLElement('div', null);
-
 			// Create Duplicators
 			$frame = new XMLElement('div');
 			$frame->setAttribute('class', 'filters-duplicator frame');
@@ -308,8 +306,7 @@
 			}
 
 			$frame->appendChild($ol);
-			$div->appendChild($frame);
-			$fieldset->appendChild($div);
+			$fieldset->appendChild($frame);
 			$form->insertChildAt(2, $fieldset);
 		}
 
