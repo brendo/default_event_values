@@ -3,7 +3,7 @@
 	<name>Default Event Values</name>
 	<description>Adds the ability to default values for your Events.</description>
 	<repo type="github">https://github.com/brendo/default_event_values</repo>
-	<url type="discuss">http://symphony-cms.com/discuss/thread/70706/</url>
+	<url type="discuss">http://www.getsymphony.com/discuss/thread/70706/</url>
 	<types>
 		<type>Events</type>
 	</types>
@@ -17,6 +17,9 @@
 		<item type="image" url="http://symphonyextensions.com/brendo/default_event_values/media/default_event_values.png">Default Event Values: Adds the ability to default values for your Events.</item>
 	</media>
 	<releases>
+		<release version="0.8.0" date="2016-03-03" min="2.4" max="2.x.x">
+			- Symphony 2.x compatibility
+		</release>
 		<release version="0.7.0" date="2014-07-13" min="2.4">
 			- Symphony 2.4 compatibility
 		</release>
