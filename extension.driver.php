@@ -256,7 +256,7 @@
 			);
 
 			$fieldset->appendChild($div);
-			$form->insertChildAt(2, $fieldset);
+			$form->insertChildAt(3, $fieldset);
 		}
 
 		private function injectDefaultValues(XMLElement &$form, Event $event, Section $section) {
@@ -313,7 +313,7 @@
 			$frame->appendChild($ol);
 			$div->appendChild($frame);
 			$fieldset->appendChild($div);
-			$form->insertChildAt(2, $fieldset);
+			$form->insertChildAt(3, $fieldset);
 		}
 
 	/*-------------------------------------------------------------------------
